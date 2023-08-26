@@ -37,21 +37,21 @@ fn handle_connection(mut stream: TcpStream) {
         and collect those reads/treams into a vector(growable array for the javascripties)
      */
     let buf_reader = BufReader::new(&mut stream);
-    let http_request: Vec<_> = buf_reader
-    .lines()
-    .map(|result| result.unwrap())
-    .take_while(|line| !line.is_empty())// I believe we need to use this to take ownership
-    .collect();
+    let request_line = buf_reader.lines().next().unwrap().unwrap();
 
-    let status_line = "HTTP/1.1 200 OK";
-    let contents = fs::read_to_string("index.html").unwrap();
-    // get the length in bytes of the html file
-    let length = contents.len();
-    // using the format! macro to put the str all together
-    let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
-    // convert the response into bytes and write it all to the stream
-    // the write_all method here is completing the exchange. after this you stop seeing an error in the browser and see a blank page
-    stream.write_all(response.as_bytes()).unwrap();
+    if request_line == "GET / HTTP/1.1" {
+        let status_line = "HTTP/1.1 200 OK";
+        let contents = fs::read_to_string("index.html").unwrap();
+        let length = contents.len();
+
+        let response = format!(
+            "{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}"
+        );
+
+        stream.write_all(response.as_bytes()).unwrap();
+    } else {
+        // some other request
+    }
 
     //println!("Request: {:#?}", http_request);
 }

@@ -40,28 +40,23 @@ fn handle_connection(mut stream: TcpStream) {
     let request_line = buf_reader.lines().next().unwrap_or_else(|| Ok("GET / HTTP/1.1".to_string())).unwrap();
 
     // Let's make sure to only send response and html if it's a GET to root /
-    if request_line == "GET / HTTP/1.1" {
-        let status_line = "HTTP/1.1 200 OK";
-        let contents = fs::read_to_string("index.html").unwrap();
-        let length = contents.len();
-
-        let response = format!(
-            "{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}"
-        );
-
-        stream.write_all(response.as_bytes()).unwrap();
+    let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
+        ("HTTP/1.1 200 OK", "index.html")
         // otherwise send proper 404 error and page
+    } else if request_line == "GET /click HTTP/1.1" {
+        ("HTTP/1.1 200 OK", "click.html")
     } else {
-        let status_line = "HTTP/1.1 404 NOT FOUND";
-        let contents = fs::read_to_string("404.html").unwrap();
-        let length = contents.len();
+        ("HTTP/1.1 404 NOT FOUND", "404.html") 
+    };
+    
+    let contents = fs::read_to_string(filename).unwrap();
+    let length = contents.len();
 
-        let response = format!(
-            "{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}"
-        ); 
+    let response = format!(
+        "{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}"
+    );
 
-        stream.write_all(response.as_bytes()).unwrap();
-    }
+    stream.write_all(response.as_bytes()).unwrap();
 
     //println!("Request: {:#?}", http_request);
 }

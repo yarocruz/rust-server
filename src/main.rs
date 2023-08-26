@@ -3,6 +3,19 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
+/*
+The HTTP PROTOCOL is a simple test-based
+
+The response must follow this format in text
+
+HTTP-Version Status-Code Reason-Phrase CRLF (Carriage Return Line Feed)
+headers CRLF
+message-body
+
+Literally this for a OK 200
+HTTP/1.1 200 OK\r\n\r\n
+*/
+
 fn main() {
     // TcpListener.bind() creates a "listener" at the address and port indicated and returns a Result type
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
@@ -29,5 +42,10 @@ fn handle_connection(mut stream: TcpStream) {
     .take_while(|line| !line.is_empty())// I believe we need to use this to take ownership
     .collect();
 
-    println!("Request: {:#?}", http_request);
+    let response = "HTTP/1.1 200 OK\r\n\r\n";
+    // convert the response into bytes and write it all to the stream
+    // the write_all method here is completing the exchange. after this you stop seeing an error in the browser and see a blank page
+    stream.write_all(response.as_bytes()).unwrap();
+
+    //println!("Request: {:#?}", http_request);
 }

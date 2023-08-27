@@ -6,6 +6,8 @@ use std::{
     time::Duration,
 };
 
+use rust_server::ThreadPool;
+
 /*
 The HTTP PROTOCOL is a simple test-based
 
@@ -22,6 +24,7 @@ HTTP/1.1 200 OK\r\n\r\n
 fn main() {
     // TcpListener.bind() creates a "listener" at the address and port indicated and returns a Result type
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let pool = ThreadPool::new(4);
 
     // for every incoming request to the listener create a stream
     for stream in listener.incoming() {
@@ -29,7 +32,7 @@ fn main() {
         let stream = stream.unwrap();
 
         // create or spawn a thread
-        thread::spawn(|| {
+        pool.execute(|| {
             handle_connection(stream);
         });
     }

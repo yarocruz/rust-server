@@ -28,7 +28,10 @@ fn main() {
         // shadow the stream hear. we're not doing anything with the stream here for now
         let stream = stream.unwrap();
 
-        handle_connection(stream);
+        // create or spawn a thread
+        thread::spawn(|| {
+            handle_connection(stream);
+        });
     }
 }
 

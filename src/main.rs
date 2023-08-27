@@ -2,6 +2,8 @@ use std::{
     fs,
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
+    thread,
+    time::Duration,
 };
 
 /*
@@ -40,13 +42,14 @@ fn handle_connection(mut stream: TcpStream) {
     let request_line = buf_reader.lines().next().unwrap_or_else(|| Ok("GET / HTTP/1.1".to_string())).unwrap();
 
     // Let's make sure to only send response and html if it's a GET to root /
-    let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
-        ("HTTP/1.1 200 OK", "index.html")
-        // otherwise send proper 404 error and page
-    } else if request_line == "GET /click HTTP/1.1" {
-        ("HTTP/1.1 200 OK", "click.html")
-    } else {
-        ("HTTP/1.1 404 NOT FOUND", "404.html") 
+    let (status_line, filename) = match &request_line[..] {
+        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "index.html"),
+        "GET /click HTTP/1.1" => ("HTTP/1.1 200 OK", "click.html"),
+        "GET /sleep HTTP/1.1" => { 
+            thread::sleep(Duration::from_secs(5));
+            ("HTTP/1.1 200 OK", "click.html") 
+        }
+        _ => ("HTTP/1.1 404 NOT FOUND", "404.html") 
     };
     
     let contents = fs::read_to_string(filename).unwrap();

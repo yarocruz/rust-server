@@ -72,8 +72,8 @@ fn handle_connection(mut stream: TcpStream) {
     // );
 
     let todos: Vec<Todo> = vec![
-        Todo::new(1, "Taste htmx".to_string(), true),
-        Todo::new(2, "Buy a unicorn".to_string(), false),
+        Todo::new(1, "Taste htmx", true),
+        Todo::new(2, "Buy a unicorn", false),
     ];
 
     let get = b"GET / HTTP/1.1\r\n";
@@ -82,14 +82,15 @@ fn handle_connection(mut stream: TcpStream) {
 
     let (status_line, filename) = if buffer.starts_with(get) {
         println!("These are the todos {:?}", todos);
-        ("HTTP/1.1 200 OK", "index.html")
+        ("HTTP/1.1 200 OK", "index.html".to_string())
     } else if buffer.starts_with(sleep) {
         thread::sleep(Duration::from_secs(5));
-        ("HTTP/1.1 200 OK", "index.html")
+        ("HTTP/1.1 200 OK", "index.html".to_string())
     } else if buffer.starts_with(click) {
-        ("HTTP/1.1 200 OK", "<h1>Todo</h1") 
+        let todo = format!("<h1>Todo {} </h1>", todos[0].name);
+        ("HTTP/1.1 200 OK", todo) 
     } else {
-        ("HTTP/1.1 404 NOT FOUND", "404.html")
+        ("HTTP/1.1 404 NOT FOUND", "404.html".to_string())
     };
 
     let contents = if filename.chars().nth(0) == Some('<') {
@@ -97,7 +98,6 @@ fn handle_connection(mut stream: TcpStream) {
     } else {
         fs::read_to_string(filename).unwrap()
     };
-
 
     let response = format!(
         "{}\r\nContent-Length: {}\r\n\r\n{}",

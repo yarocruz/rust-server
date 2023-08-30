@@ -1,6 +1,18 @@
 use std::{sync::{mpsc, Arc, Mutex},
  thread,
 };
+#[derive(Debug)]
+pub struct Todo {
+    pub id: u32,
+    pub name: String,
+    pub done: bool,
+}
+
+impl Todo {
+   pub fn new(id: u32, name: String, done: bool) -> Todo {
+    Todo { id, name, done, }
+   } 
+}
 
 pub struct ThreadPool {
     workers: Vec<Worker>,

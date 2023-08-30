@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use rust_server::ThreadPool;
+use rust_server::{ThreadPool, Todo};
 
 /*
 The HTTP PROTOCOL is a simple test-based
@@ -71,22 +71,33 @@ fn handle_connection(mut stream: TcpStream) {
     //     "{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}"
     // );
 
+    let todos: Vec<Todo> = vec![
+        Todo::new(1, "Taste htmx".to_string(), true),
+        Todo::new(2, "Buy a unicorn".to_string(), false),
+    ];
+
     let get = b"GET / HTTP/1.1\r\n";
     let sleep = b"GET /sleep HTTP/1.1\r\n";
     let click = b"GET /click HTTP/1.1\r\n";
 
     let (status_line, filename) = if buffer.starts_with(get) {
+        println!("These are the todos {:?}", todos);
         ("HTTP/1.1 200 OK", "index.html")
     } else if buffer.starts_with(sleep) {
         thread::sleep(Duration::from_secs(5));
         ("HTTP/1.1 200 OK", "index.html")
     } else if buffer.starts_with(click) {
-        ("HTTP/1.1 200 OK", "click.html") 
+        ("HTTP/1.1 200 OK", "<h1>Todo</h1") 
     } else {
         ("HTTP/1.1 404 NOT FOUND", "404.html")
     };
 
-    let contents = fs::read_to_string(filename).unwrap();
+    let contents = if filename.chars().nth(0) == Some('<') {
+        filename.to_string()
+    } else {
+        fs::read_to_string(filename).unwrap()
+    };
+
 
     let response = format!(
         "{}\r\nContent-Length: {}\r\n\r\n{}",
